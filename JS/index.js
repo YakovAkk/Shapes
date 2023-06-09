@@ -104,7 +104,7 @@ var shapeController = {
     },
 
     render: function() {
-        this.ctx.fillStyle = "#000000";
+        this.ctx.fillStyle = "#5A5A69";
         this.ctx.fillRect(0, 0, canvas.width, canvas.height);
         //console.log(shapeController.points);
         shapeController.points.forEach(function(point) {
@@ -148,7 +148,7 @@ function reset() {
 
 function about() {			
     alert(
-        "Натисни будь-де по чорному канвасу щоб поставити точку. \n"+
+        "Натисни будь-де по сірому канвасу щоб поставити точку. \n"+
         "Максимум можна поставити 4 точки. \n"+
         "Як тільки всі 4 точки буде виставлено за ними побудується два кола. \n"+
         "Синє коло з центром у точці A, радіус якого дорівнює відстані від точки A до точки B.\n"+
