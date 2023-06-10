@@ -3,6 +3,7 @@ var shapeController = {
     width: 0,
     height: 0,
     points: [],
+    pointsIntersected : [],
     blueCircle: {},
     yellowCircle: {},
     mouseDownOnPoint: -1,
@@ -43,8 +44,14 @@ var shapeController = {
         else if(shapeController.points.length < 4){
             shapeController.addNewPoint(event);
 
-            if(shapeController.points.length == 4)
+            if(shapeController.points.length >= 4){
                 shapeController.addFiguresInfo();
+
+                if(shapeController.isCirclesIntersected())
+                 shapeController.createIntersectedPoints();
+
+            }
+                
 
             shapeController.render();
         }
@@ -69,24 +76,76 @@ var shapeController = {
     },
 
     movePoint: function(event){
+        this.pointsIntersected = []
         if(shapeController.mouseDownOnPoint != -1){
             shapeController.points[shapeController.mouseDownOnPoint].posx = event.pageX + mousePointOffset.x;
             shapeController.points[shapeController.mouseDownOnPoint].posy = event.pageY + mousePointOffset.y;
 
-            if(shapeController.points.length == 4)
+            if(shapeController.points.length >= 4){
                 shapeController.addFiguresInfo();
-
+                if(shapeController.isCirclesIntersected())
+                    shapeController.createIntersectedPoints()
+            }
             shapeController.render();
         }
     },
 
+    isCirclesIntersected : function(){
+        let pointYellow = this.yellowCircle.point
+        let pointBlue = this.blueCircle.point
+
+        let distance = Math.sqrt(Math.pow((pointBlue.posx - pointYellow.posx),2) + 
+        Math.pow((pointBlue.posy - pointYellow.posy),2));
+
+        return distance <= this.blueCircle.radius + this.yellowCircle.radius
+    },
+    createIntersectedPoints(){
+        let dx = this.blueCircle.point.posx - this.yellowCircle.point.posx
+        let dy = this.blueCircle.point.posy - this.yellowCircle.point.posy
+
+        let pointYellow = this.yellowCircle.point
+        let pointBlue = this.blueCircle.point
+        let distance = Math.sqrt(Math.pow((pointBlue.posx - pointYellow.posx),2) + 
+        Math.pow((pointBlue.posy - pointYellow.posy),2));
+
+        let sideA = this.blueCircle.radius;
+        let sideB = this.yellowCircle.radius;
+        let sideC = distance
+
+        let aSquare = Math.pow(sideA,2);
+        let bSquare = Math.pow(sideB,2);
+        let cSquare = Math.pow(sideC,2);
+
+        let cosineA = (aSquare - bSquare + cSquare)/ (sideA * sideC * 2);
+        let angleOfRotation = Math.acos(cosineA);
+        let angleCorrection = Math.atan2(dy,dx);
+
+        let pointOneX = pointBlue.posx - Math.cos(angleCorrection + angleOfRotation) * sideA
+        let pointOneY = pointBlue.posy - Math.sin(angleCorrection + angleOfRotation) * sideA
+
+        let pointTwoX = pointBlue.posx - Math.cos(angleCorrection - angleOfRotation) * sideA
+        let pointTwoY = pointBlue.posy - Math.sin(angleCorrection - angleOfRotation) * sideA
+
+        this.pointsIntersected.push({
+            posx: pointOneX,
+            posy: pointOneY,
+            radius: 5,
+            color: 'white'
+        }); 
+
+        this.pointsIntersected.push({
+            posx: pointTwoX,
+            posy: pointTwoY,
+            radius: 5,
+            color: 'white'
+        }); 
+    },
+
     addFiguresInfo: function() {
-        this.blueCircle = this.fillCircleData(shapeController.points[0],shapeController.points[1],
+        this.blueCircle = this.fillCircleData(shapeController.points[0], shapeController.points[1],
             "blue")
-            this.yellowCircle = this.fillCircleData(shapeController.points[2],
-                shapeController.points[3],
-                "yellow")
-        
+        this.yellowCircle = this.fillCircleData(shapeController.points[2], shapeController.points[3],
+            "yellow")
     },
 
     fillCircleData: function(point1, point2, color){
@@ -108,14 +167,11 @@ var shapeController = {
         this.ctx.fillRect(0, 0, canvas.width, canvas.height);
         //console.log(shapeController.points);
         shapeController.points.forEach(function(point) {
-            shapeController.ctx.strokeStyle = point.color;
-            shapeController.ctx.beginPath();
-            shapeController.ctx.arc(point.posx, point.posy, point.radius, 0, 2*Math.PI);
-            shapeController.ctx.stroke();
+            shapeController.drawPoint(point)
+        });
 
-            var str = '(' + point.posx + ', ' + point.posy + ')';
-            shapeController.ctx.fillStyle = "white";
-            shapeController.ctx.fillText(str, point.posx - str.length / 2 * 18, point.posy - 20);
+        shapeController.pointsIntersected.forEach(function(point) {
+            shapeController.drawPoint(point)
         });
 
         if(shapeController.blueCircle.point != null ){
@@ -127,6 +183,17 @@ var shapeController = {
         }
     },
     
+    drawPoint : function(point){
+        shapeController.ctx.strokeStyle = point.color;
+        shapeController.ctx.beginPath();
+        shapeController.ctx.arc(point.posx, point.posy, point.radius, 0, 2*Math.PI);
+        shapeController.ctx.stroke();
+
+        var str = '(' + Math.round(point.posx)  + ', ' + Math.round(point.posy) + ')';
+        shapeController.ctx.fillStyle = "white";
+        shapeController.ctx.fillText(str, point.posx - str.length / 2 * 18, point.posy - 20);
+    },
+
     drawCircle : function(circle){
         shapeController.ctx.strokeStyle = circle.color;
         shapeController.ctx.beginPath();
